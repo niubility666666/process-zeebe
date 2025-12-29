@@ -1,210 +1,115 @@
-process-zeebe
+# Process-Zeebe Workflow Platform
 
-A Zeebe-based workflow engine and monitoring platform, providing process execution APIs, worker integration, and an Operate-like data importer for workflow visibility.
+A production-oriented workflow orchestration and monitoring platform built on top of **Camunda Zeebe**, designed for enterprise integration, workflow governance, and process observability.
 
-📌 Project Overview
+---
 
-process-zeebe is a workflow platform built on top of Camunda Zeebe, focusing on:
+## Overview
 
-Process deployment & instance execution
+**Process-Zeebe** is an enterprise-grade workflow platform that wraps **Camunda Zeebe** with:
 
-Job worker integration
+- Unified workflow execution APIs
+- A workflow data ingestion and materialization layer
+- Clear separation between execution and monitoring
+- A foundation for building workflow consoles and governance systems
 
-Workflow data importing and materialization
+This project is intended for teams that want to treat workflow as a **platform capability**, not just a library dependency.
 
-Process / job / variable monitoring
+---
 
-Lightweight alternative to Camunda Operate (backend-focused)
+## Why Process-Zeebe
 
-The project is designed to be independently deployed, Spring Boot friendly, and easy to integrate into existing systems.
+Zeebe is a powerful BPMN workflow engine, but it intentionally does **not** provide:
 
-🧠 Architecture Overview
+- Query APIs
+- Operational data views
+- Process monitoring backends
+- Business-oriented abstractions
 
-This project follows the Zeebe recommended architecture:
+**Process-Zeebe fills this gap** by adding a platform layer on top of Zeebe, enabling:
 
-Zeebe Broker
-   ↓ (Record Stream)
-Process Importer
-   ↓
-Materialized Storage
-   ↓
-Process Engine APIs
+- Centralized workflow management
+- Observability and monitoring
+- Easier enterprise integration
+- Long-term product evolution
 
+---
 
-It does not reimplement BPMN semantics, but relies on Zeebe’s native execution model.
+## Core Capabilities
 
-🏗️ Project Structure
-process-zeebe
-├── process-engine
-│   ├── src/main/java/com/rt/engine
-│   │   ├── StartApp.java              # Spring Boot entry point
-│   │   ├── controller                 # REST APIs
-│   │   ├── service                    # Zeebe client & workflow services
-│   │   ├── bean
-│   │   │   └── dto                    # API DTOs (process, job, form, node)
-│   │   └── config                     # Zeebe / Spring configuration
-│   └── src/main/resources
-│       └── application.yml
-│
-├── process-importer
-│   ├── src/main/java/com/rt/importer
-│   │   ├── service
-│   │   │   ├── ZeebeImportService     # Zeebe record importer
-│   │   │   └── ZeebeHazelcastService  # State/cache integration
-│   │   ├── repository
-│   │   │   ├── ProcessRepository
-│   │   │   ├── ProcessInstanceRepository
-│   │   │   ├── JobRepository
-│   │   │   ├── VariableRepository
-│   │   │   ├── TimerRepository
-│   │   │   └── IncidentRepository
-│   └── src/main/resources
-│       ├── application.yml
-│       └── logback.xml
+### Workflow Execution
 
-🚀 Core Modules
-1️⃣ process-engine
+- BPMN 2.0 execution powered by Zeebe
+- REST-based process deployment and instance creation
+- Decoupled job worker model
+- Suitable for orchestration and Saga patterns
 
-Workflow execution & API layer
+---
 
-Responsibilities:
+### Workflow Observability
 
-Deploy BPMN processes
+- Real-time ingestion of Zeebe record streams
+- Materialized workflow state
+- Query-friendly process, job, variable, and timer data
+- Foundation for dashboards and operational tooling
 
-Start process instances
+---
 
-Complete jobs / tasks
+### Platform Architecture
 
-Provide process & job APIs
+- Independent service deployment
+- Clear responsibility boundaries
+- Horizontally scalable design
+- Microservice-friendly integration model
 
-Serve workflow metadata to external systems
+---
 
-Key features:
+## BPMN Support
 
-Zeebe Client encapsulation
+All BPMN semantics are executed **natively by Zeebe**, including:
 
-REST-based workflow control
+- Start / End Events
+- Service Tasks (Job Workers)
+- User Tasks
+- Exclusive Gateways (XOR)
+- Parallel Gateways (AND)
+- Timer Events
+- SubProcesses
+- Message Events
 
-DTO-based API contract
+No custom BPMN execution logic is implemented.
 
-Spring Boot native startup
+---
 
-2️⃣ process-importer
+## Architecture
 
-Workflow data importer & materialized view layer
-
-Responsibilities:
-
-Subscribe to Zeebe record stream
-
-Import process / job / variable / timer data
-
-Persist workflow runtime data
-
-Support monitoring & query use cases
-
-Imported data includes:
-
-Process definitions
-
-Process instances
-
-Jobs
-
-Variables
-
-Timers
-
-Incidents
-
-Messages
-
-This module plays a similar role to Camunda Operate, focusing on data ingestion rather than UI.
-
-🔧 Tech Stack
-
-Java 21
-
-Spring Boot 3.2.3
-
-Camunda Zeebe 8.x
-
-Hazelcast (state/cache)
-
-Relational database (materialized views)
-
-📦 Running the Project
-1. Prerequisites
-
-Java 21
-
-Zeebe Broker (Standalone or Cluster)
-
-Database (for importer persistence)
-
-2. Start process-importer
-cd process-importer
-mvn spring-boot:run
-
-
-This service listens to Zeebe records and builds queryable workflow data.
-
-3. Start process-engine
-cd process-engine
-mvn spring-boot:run
-
-
-This service exposes workflow APIs to external systems.
-
-🔍 Supported BPMN Capabilities
-
-All BPMN execution semantics are provided natively by Zeebe, including:
-
-Service Task (Job Worker)
-
-User Task
-
-Exclusive Gateway (XOR)
-
-Parallel Gateway (AND)
-
-Timer Event
-
-SubProcess
-
-Message Events
-
-📡 Typical Use Cases
-
-Workflow orchestration platform
-
-Microservice process coordination
-
-Internal workflow middle platform
-
-Zeebe-based process monitoring backend
-
-Custom Operate / workflow console backend
-
-🛣️ Future Enhancements
-
-Embedded Zeebe runtime (local dev & CI)
-
-REST-based workflow monitoring APIs
-
-Web-based Operate-lite console
-
-Elasticsearch exporter support
-
-Multi-tenant workflow isolation
-
-Kubernetes / Helm deployment
-
-📄 License
-
-Apache License 2.0
-
-⭐ Notes
-
-This project focuses on engineering practicality and extensibility rather than rebuilding a workflow engine.
-It is intended for teams who want to build workflow products on top of Zeebe, not replace it.
+```text
+                 +---------------------+
+                 |  Business Services  |
+                 +----------+----------+
+                            |
+                       REST / SDK
+                            |
+                 +----------v----------+
+                 |   process-engine   |
+                 | Workflow Execution |
+                 +----------+----------+
+                            |
+                       Zeebe Client
+                            |
+                 +----------v----------+
+                 |   Zeebe Broker     |
+                 +----------+----------+
+                            |
+                     Record Stream
+                            |
+                 +----------v----------+
+                 |  process-importer  |
+                 | Materialized Views |
+                 +----------+----------+
+                            |
+                      SQL / Cache
+                            |
+                 +----------v----------+
+                 |  Operate / BI / UI |
+                 +--------------------+
