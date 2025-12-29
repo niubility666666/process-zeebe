@@ -21,7 +21,7 @@ import springfox.documentation.spring.web.plugins.Docket;
 @EnableSwagger2Doc
 @Configuration
 public class SwaggerConfig {
-    @Bean("beagleDocket")
+    @Bean("RtDocket")
     @Primary
     public Docket getDocket() {
         ParameterBuilder parameterBuilder = new ParameterBuilder();
@@ -30,12 +30,12 @@ public class SwaggerConfig {
             .parameterType("header").required(false).build();
         parameters.add(parameterBuilder.build());
 
-        return new Docket(DocumentationType.SWAGGER_2).groupName("beagle").select().apis(RequestHandlerSelectors.any())
+        return new Docket(DocumentationType.SWAGGER_2).groupName("rt").select().apis(RequestHandlerSelectors.any())
             .build().globalOperationParameters(parameters).apiInfo(apiInfo());
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder().title("api swagger document").description("beagle process api doc").version("1.0")
+        return new ApiInfoBuilder().title("api swagger document").description("rt process api doc").version("1.0")
             .build();
     }
 }

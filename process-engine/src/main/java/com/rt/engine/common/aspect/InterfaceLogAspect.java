@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class InterfaceLogAspect {
 
     @Description("打印接口请求报文")
-    @Before("execution(* com.beagle.engine.controller..*.*(..))")
+    @Before("execution(* com.rt.engine.controller..*.*(..))")
     public void before(JoinPoint joinPoint) {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes)RequestContextHolder.getRequestAttributes();

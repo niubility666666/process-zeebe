@@ -8,7 +8,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
-import com.rt.engine.common.config.BeagleConfig;
+import com.rt.engine.common.config.RtConfig;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,18 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 public class DynamicCronTask implements SchedulingConfigurer {
 
     @Resource
-    private BeagleConfig beagleConfig;
-    @Resource
-    private SyncApaasServiceTask syncApaasServiceTask;
+    private RtConfig rtConfig;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         taskRegistrar.addTriggerTask(() -> {
             log.info("DynamicCronTask: syncInfo begin");
-            syncApaasServiceTask.syncApaasService();
             log.info("DynamicCronTask: syncInfo end");
         }, triggerContext -> {
-            CronTrigger trigger = new CronTrigger(beagleConfig.syncApaasServiceCron);
+            CronTrigger trigger = new CronTrigger(rtConfig.syncApaasServiceCron);
             return trigger.nextExecutionTime(triggerContext);
         });
     }

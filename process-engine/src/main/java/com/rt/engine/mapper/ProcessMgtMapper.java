@@ -2,7 +2,6 @@ package com.rt.engine.mapper;
 
 import java.util.List;
 
-import com.beagle.engine.bean.dto.*;
 import com.rt.engine.bean.dto.*;
 import com.rt.engine.bean.query.ZeebeProcessInstanceQuery;
 import org.apache.ibatis.annotations.Param;

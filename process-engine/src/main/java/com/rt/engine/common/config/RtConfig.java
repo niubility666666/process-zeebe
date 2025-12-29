@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-public class BeagleConfig {
+public class RtConfig {
 
     @Value("${beagle.apaas.proxy-url}")
     public String apaasProxyUrl;

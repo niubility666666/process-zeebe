@@ -30,7 +30,7 @@ public class OperationLogAspect {
     @Resource
     private OperationLogMapper operationLogMapper;
 
-    @AfterReturning(pointcut = "execution(* com.beagle.engine.controller..*.*(..))", returning = "result")
+    @AfterReturning(pointcut = "execution(* com.rt.engine.controller..*.*(..))", returning = "result")
     public void afterReturning(JoinPoint joinPoint, Object result) {
         try {
             // 接口调用成功才会记录操作日志
