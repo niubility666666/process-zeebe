@@ -9,8 +9,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
-import com.rt.engine.service.SyncApaasService;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
