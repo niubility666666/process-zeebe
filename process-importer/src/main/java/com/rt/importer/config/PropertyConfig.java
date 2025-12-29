@@ -4,17 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
 
-/**
- * application自定义key 配置
- * 
- * @author wuwanli
- * @version 1.0
- * @date 2021/8/4
- */
 @Data
 @ConfigurationProperties(prefix = PropertyConfig.PREFIX)
 public class PropertyConfig {
-    public static final String PREFIX = "beagle";
+    public static final String PREFIX = "rt";
     private final HazelCast hazelCast;
 
     public PropertyConfig() {
