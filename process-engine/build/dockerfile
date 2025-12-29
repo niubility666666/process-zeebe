@@ -1,0 +1,11 @@
+ARG BASE
+
+FROM ${BASE}
+
+ARG AUTHOR
+ARG VERSION
+
+LABEL maintainer=${AUTHOR} version=${VERSION}
+
+COPY ./target/process-engine-1.0.jar /app/process-engine.jar
+ENTRYPOINT ["java","-jar","/app/process-engine.jar","--spring.config.location=/app/application.yaml","-Duser.timezone=Asia/Shanghai"]

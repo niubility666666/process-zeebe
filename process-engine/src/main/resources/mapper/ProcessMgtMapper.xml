@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessMgtMapper">
+
+    <!-- 新增流程信息-->
+    <insert id="insertProcessInfo" parameterType="com.rt.engine.bean.entity.ProcessInfo">
+        insert into process_info_t(process_id, process_name, form_id, bpmn_xml, created_by, created_time, updated_time)
+        values (#{processId}, #{processName}, #{formId}, #{bpmnXml}, #{createdBy}, now(), now())
+    </insert>
+
+
+    <!-- 更新流程信息 -->
+    <update id="updateProcessInfo" parameterType="com.rt.engine.bean.entity.ProcessInfo">
+        update process_info_t
+        <set>
+            <if test="processName!=null and processName!=''">
+                process_name= #{processName},
+            </if>
+            <if test="formId!=null and formId!=''">
+                form_id= #{formId},
+            </if>
+            <if test="bpmnXml!=null and bpmnXml!=''">
+                bpmn_xml= #{bpmnXml},
+            </if>
+            <if test="isReleased!=null">
+                is_released= #{isReleased},
+            </if>
+            <if test="version!=null">
+                version= #{version},
+            </if>
+            updated_by= #{updatedBy},
+            updated_time= now()
+        </set>
+        <where>
+            process_id = #{processId}
+        </where>
+    </update>
+
+
+    <delete id="cancelPublishProcess">
+        update process_info_t
+        set is_released  = 0,
+            updated_by   = #{userId},
+            updated_time = now()
+        where process_id = #{processId}
+    </delete>
+    <delete id="deleteProcess">
+        update process_info_t
+        set is_deleted = 1,
+        updated_by = #{userId},
+        updated_time = now()
+        where process_id in
+        <foreach collection="list" open="(" close=")" item="item" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryProcessList" resultType="com.rt.engine.bean.dto.ProcessInfoDto">
+        select p.process_id,
+        p.process_name,
+        p.form_id,
+        f.form_name,
+        p.bpmn_xml,
+        p.is_released,
+        p.version,
+        p.is_deleted,
+        p.created_by,
+        to_char(p.created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+        p.updated_by,
+        to_char(p.updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+        from process_info_t p left join form_t f on p.form_id = f.form_id
+        <where>
+            <if test="processId !=null and processId != ''">
+                p.process_id like '%'||#{processId}||'%'
+            </if>
+            <if test="processName !=null and processName != ''">
+                and p.process_name like '%'||#{processName}||'%'
+            </if>
+            <if test="isReleased != null">
+                and p.is_released = #{isReleased}
+            </if>
+            and p.is_deleted = 0
+        </where>
+        order by p.updated_time desc
+    </select>
+
+    <select id="queryProcessForMonitorList" resultType="com.rt.engine.bean.dto.ProcessForMonitorDto">
+        select p.process_id,
+        p.process_name,
+        (select count(zp.key_) from zeebe_process_instance zp where p.process_id = zp.bpmn_process_id_ and
+        lower(zp.state_) = lower('Active')) as activate_instance_num,
+        (select count(zp.key_) from zeebe_process_instance zp where p.process_id = zp.bpmn_process_id_ and
+        lower(zp.state_) = lower('Terminated')) as termination_instance_num,
+        (select count(zp.key_) from zeebe_process_instance zp where p.process_id = zp.bpmn_process_id_ and
+        lower(zp.state_) = lower('Completed')) as complete_instance_num
+        from process_info_t p
+        <where>
+            <if test="processId !=null and processId != ''">
+                p.process_id like '%'||#{processId}||'%'
+            </if>
+            <if test="processName !=null and processName != ''">
+                and p.process_name like '%'||#{processName}||'%'
+            </if>
+            <if test="isReleased != null">
+                and p.is_released = #{isReleased}
+            </if>
+            and p.is_deleted = 0
+        </where>
+        order by p.updated_time desc
+    </select>
+
+    <select id="queryProcessTotalList" resultType="com.rt.engine.bean.dto.ZeebeProcessInstance">
+        select key_ as key, bpmn_process_id_ as bpmnProcessId, state_ as state from zeebe_process_instance where
+        bpmn_process_id_ in
+        (
+        select p.process_id
+        from process_info_t p
+        <where>
+            <if test="processId !=null and processId != ''">
+                p.process_id like '%'||#{processId}||'%'
+            </if>
+            <if test="processName !=null and processName != ''">
+                and p.process_name like '%'||#{processName}||'%'
+            </if>
+            <if test="isReleased != null">
+                and p.is_released = #{isReleased}
+            </if>
+            and p.is_deleted = 0
+        </where>
+        )
+    </select>
+
+    <select id="queryInstanceList" resultType="com.rt.engine.bean.dto.ZeebeProcessInstanceDto">
+        select key_ as key, bpmn_process_id_ as process_id, CASE state_
+        WHEN 'Active' THEN 0
+        WHEN 'Terminated' THEN 1
+        ELSE 2
+        END AS state,
+        to_char(date_trunc('second',start_), 'YYYY-MM-DD HH24:MI:SS') as start_time,
+        to_char(date_trunc('second',end_), 'YYYY-MM-DD HH24:MI:SS') as end_time
+        from zeebe_process_instance
+        <where>
+            key_ = #{instanceId}
+            <if test="state == 0">
+                and lower(state_) = lower('Active')
+            </if>
+            <if test="state == 1">
+                and lower(state_) = lower('Terminated')
+            </if>
+            <if test="state == 2">
+                and lower(state_) = lower('Completed')
+            </if>
+            <if test="startTimeStart != null and startTimeStart != ''">
+                and start_ <![CDATA[>=]]> extract(epoch from #{startTimeStart}::time)*1000
+            </if>
+            <if test="startTimeEnd != null and startTimeEnd != ''">
+                and start_ <![CDATA[<=]]> extract(epoch from #{startTimeEnd}::time)*1000
+            </if>
+            <if test="endTimeStart != null and endTimeStart != ''">
+                and end_ <![CDATA[>=]]> extract(epoch from #{endTimeStart}::time)*1000
+            </if>
+            <if test="endTimeEnd != null and endTimeEnd != ''">
+                and end_ <![CDATA[<=]]> extract(epoch from #{endTimeEnd}::time)*1000
+            </if>
+        </where>
+    </select>
+
+    <select id="queryInstanceDetail" resultType="com.rt.engine.bean.dto.ProcessInstanceViewDto">
+        SELECT t1.key_               as key,
+               t1.element_id_        as element_id,
+               t2.element_name,
+               t2.element_start_time,
+               t2.element_end_time,
+               t1.intent_            as intent,
+               t1.position_          as position,
+               t2.variable_value,
+               t1.bpmn_element_type_ as element_type
+        FROM zeebe_element_instance t1
+                 left JOIN process_variable_t t2 ON t1.element_id_ = t2.element_id
+        WHERE t1.process_instance_key_ = #{instanceId}
+          and t2.process_instance_key = #{instanceId}
+          and lower(t1.bpmn_element_type_) in (lower('USER_TASK'), lower('SERVICE_TASK'))
+        ORDER BY t1.timestamp_ desc
+    </select>
+
+    <select id="findProcessInfoById" resultType="com.rt.engine.bean.entity.ProcessInfo">
+        select process_id,
+               process_name,
+               form_id,
+               bpmn_xml,
+               is_released,
+               version,
+               is_deleted,
+               created_by,
+               to_char(created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+               updated_by,
+               to_char(updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+        from process_info_t
+        where process_id = #{processId}
+          and is_deleted = 0
+    </select>
+
+    <select id="findProcessInfoByName" resultType="com.rt.engine.bean.entity.ProcessInfo">
+        select process_id,
+               process_name,
+               form_id,
+               bpmn_xml,
+               is_released,
+               version,
+               is_deleted,
+               created_by,
+               to_char(created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+               updated_by,
+               to_char(updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+        from process_info_t
+        where process_name = #{processName}
+          and is_deleted = 0
+    </select>
+
+    <select id="findProcessInfoByIdList" resultType="com.rt.engine.bean.entity.ProcessInfo">
+        select process_id,
+        process_name,
+        form_id,
+        bpmn_xml,
+        is_released,
+        version,
+        is_deleted,
+        created_by,
+        to_char(created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+        updated_by,
+        to_char(updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+        from process_info_t
+        where process_id in
+        <foreach collection="list" open="(" close=")" separator="," item="item">
+            #{item}
+        </foreach>
+        and is_deleted = 0
+    </select>
+    <select id="findProcessNodeItemListByProcessIdList" resultType="com.rt.engine.bean.entity.ProcessNodeItem">
+        select item_id,
+        process_id,
+        version,
+        is_released,
+        is_deleted,
+        element_id,
+        element_type,
+        item_type,
+        item_value,
+        ext1,
+        ext2,
+        ext3
+        from process_node_item_t
+        where
+        is_deleted = 0
+        and process_id in
+        <foreach collection="list" separator="," item="item" open="(" close=")">
+            #{item}
+        </foreach>
+        and lower(element_type) = lower('sequenceFlow')
+    </select>
+
+    <!--查询用户列表-->
+    <select id="findUserList" resultType="com.rt.engine.bean.entity.UserInfo">
+        select distinct user_id, user_name
+        from user_role
+        <where>
+            user_id is not null
+            and user_name is not null
+            <if test="userName!=null and userName!=''">
+                and user_name like '%'|| #{userName}||'%'
+            </if>
+        </where>
+    </select>
+    <!--查询角色列表-->
+    <select id="findRoleList" resultType="com.rt.engine.bean.entity.RoleInfo">
+        select distinct role_id, role_name
+        from user_role
+        <where>
+            role_id is not null
+            and role_name is not null
+            <if test="roleName!=null and roleName!=''">
+                role_name like '%'|| #{roleName}||'%'
+            </if>
+        </where>
+    </select>
+    <select id="queryFormList" resultType="com.rt.engine.bean.dto.FormDto">
+        select form_id, form_name, version from form_t
+        <where>
+            <if test="formName != null and formName!=''">
+                form_name like '%'|| #{formName}||'%'
+            </if>
+        </where>
+    </select>
+    <select id="queryFormColumnList" resultType="com.rt.engine.bean.dto.FormColumnDto">
+        select form_id, column_name, column_desc
+        from form_column_t
+        where form_id = #{formId}
+    </select>
+
+    <!--流程发布历史数据-->
+    <insert id="insertProcessInfoHis" parameterType="com.rt.engine.bean.entity.ProcessInfoHis">
+        insert into process_info_his(process_id, process_name, form_id, bpmn_xml, version, deployment_id, created_by,
+                                     created_time)
+        values (#{processId}, #{processName}, #{formId}, #{bpmnXml}, #{version}, #{deploymentId}, #{createdBy}, now())
+        on conflict(process_id,version)
+            do update set process_name= #{processName},
+                          form_id= #{formId},
+                          bpmn_xml= #{bpmnXml},
+                          deployment_id= #{deploymentId},
+                          created_by= #{createdBy},
+                          created_time =now()
+    </insert>
+
+    <insert id="insertProcessElement" parameterType="com.rt.engine.bean.entity.ProcessElement">
+        <foreach collection="processElementList" item="element" separator=";">
+            insert into process_element_t(process_id,version, element_id, element_name, element_type) values
+            (#{element.processId}, #{element.version},#{element.elementId}, #{element.elementName},
+            #{element.elementType})
+            on conflict(process_id,version,element_id)
+            do update set element_name= #{element.elementName},
+            element_type= #{element.elementType}
+        </foreach>
+    </insert>
+
+
+</mapper>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessParamVariableMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rt.engine.bean.entity.ProcessParamVariable">
+        <id column="param_id" property="paramId"/>
+        <result column="parent_param_id" property="parentParamId"/>
+        <result column="param_name" property="paramName"/>
+        <result column="process_id" property="processId"/>
+        <result column="service_id" property="serviceId"/>
+        <result column="element_id" property="elementId"/>
+        <result column="element_name" property="elementName"/>
+        <result column="is_node" property="isNode"/>
+        <result column="is_param" property="isParam"/>
+        <result column="param_type" property="paramType"/>
+        <result column="is_must" property="isMust"/>
+        <result column="value_region" property="valueRegion"/>
+        <result column="value_or_example" property="valueOrExample"/>
+        <result column="instructions" property="instructions"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_time" property="updatedTime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        param_id, parent_param_id, param_name, process_id, service_id, element_id, element_name, is_node, is_param, param_type, is_must, value_region, value_or_example, instructions, created_by, to_char(created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+        updated_by,
+        to_char(updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+    </sql>
+
+    <select id="selectProcessParamVariableList" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from process_param_variable
+        <where>
+
+        </where>
+    </select>
+    <select id="selectProcessParamVariableListByProcessId"
+            resultType="com.rt.engine.bean.entity.ProcessParamVariable">
+        select
+        <include refid="Base_Column_List"/>
+        from process_param_variable
+        <where>
+            process_id = #{processId}
+        </where>
+    </select>
+
+    <insert id="insertProcessParamVariable">
+        insert into process_param_variable
+        (param_id,
+         parent_param_id,
+         param_name,
+         process_id,
+         service_id,
+         element_id,
+         element_name,
+         is_node,
+         is_param,
+         param_type,
+         is_must,
+         value_region,
+         value_or_example,
+         instructions,
+         created_by,
+         created_time,
+         updated_by,
+         updated_time)
+        values (#{paramId},
+                #{parentParamId},
+                #{paramName},
+                #{processId},
+                #{serviceId},
+                #{elementId},
+                #{elementName},
+                #{isNode},
+                #{isParam},
+                #{paramType},
+                #{isMust},
+                #{valueRegion},
+                #{valueOrExample},
+                #{instructions},
+                #{createdBy},
+                now(),
+                #{updatedBy},
+                now())
+    </insert>
+    <insert id="batchInsertProcessParamVariable">
+        insert into process_param_variable
+        (param_id,
+        parent_param_id,
+        param_name,
+        process_id,
+        service_id,
+        element_id,
+        element_name,
+        is_node,
+        is_param,
+        param_type,
+        is_must,
+        value_region,
+        value_or_example,
+        instructions,
+        created_by,
+        created_time,
+        updated_by,
+        updated_time)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.paramId},
+            #{item.parentParamId},
+            #{item.paramName},
+            #{item.processId},
+            #{item.serviceId},
+            #{item.elementId},
+            #{item.elementName},
+            #{item.isNode},
+            #{item.isParam},
+            #{item.paramType},
+            #{item.isMust},
+            #{item.valueRegion},
+            #{item.valueOrExample},
+            #{item.instructions},
+            #{item.createdBy},
+            now(),
+            #{item.updatedBy},
+            now())
+        </foreach>
+    </insert>
+
+    <delete id="deleteProcessParamVariable">
+        delete
+        from process_param_variable
+        where param_id = #{paramId}
+    </delete>
+    <delete id="deleteProcessParamVariableByProcessId">
+        delete
+        from process_param_variable
+        where process_id = #{processId}
+    </delete>
+</mapper>

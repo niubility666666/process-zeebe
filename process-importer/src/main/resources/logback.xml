@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <property name="LOG_PATH" value="/home"/>
+    <property name="PATTERN_FORMAT" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread]-%-5level-[%X{traceId}]-%F:%L- %msg%n"/>
+    <property name="MAX_HISTORY" value="30"/>
+    <property name="MAX_FILE_SIZE" value="10MB"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN_FORMAT}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="INTERFACE_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/interface_log_%d{yyyyMMdd}.log</FileNamePattern>
+            <MaxHistory>${MAX_HISTORY}</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN_FORMAT}</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>${MAX_FILE_SIZE}</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/error_log_%d{yyyyMMdd}.log</FileNamePattern>
+            <MaxHistory>${MAX_HISTORY}</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN_FORMAT}</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>${MAX_FILE_SIZE}</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <appender name="RUN_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/service_log_%d{yyyyMMdd}.log</FileNamePattern>
+            <MaxHistory>${MAX_HISTORY}</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${PATTERN_FORMAT}</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>${MAX_FILE_SIZE}</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+
+    <logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
+
+    <!--输出接口日志-->
+    <logger name="com.beagle.aspect.common.com.rt.engine.InterfaceLogAspect" level="INFO" additivity="false">
+        <appender-ref ref="INTERFACE_LOG"/>
+    </logger>
+
+    <!--输出异常日志-->
+    <logger name="com.beagle.exception.common.com.rt.engine.GlobalExceptionHandler" level="ERROR">
+        <appender-ref ref="ERROR_LOG"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="RUN_LOG"/>
+    </root>
+</configuration>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessNodeItemMapper">
+    <!-- 新增流程节点属性信息-->
+    <insert id="batchInsertProcessNodeItem" parameterType="com.rt.engine.bean.entity.ProcessNodeItem">
+        insert into process_node_item_t(process_id,is_released,version,element_id, element_type,
+        item_name, item_type, item_value,
+        ext1,ext2,ext3)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.processId},#{item.isReleased},#{item.version},#{item.elementId},#{item.elementType},
+            #{item.itemName}, #{item.itemType},#{item.itemValue},
+            #{item.ext1},#{item.ext2},#{item.ext3})
+        </foreach>
+    </insert>
+
+    <!--删除未发布的流程节点属性-->
+    <delete id="deleteProcessNodeItemById">
+        delete
+        from process_node_item_t t
+        where t.is_released = 0
+          and t.process_id = #{processId}
+    </delete>
+
+    <!--流程发布更新节点的版本信息和发布状态-->
+    <update id="updateProcessNodeItem" parameterType="com.rt.engine.bean.entity.ProcessNodeItem">
+        update process_node_item_t
+        set version= ${version},
+            is_released=1
+        where process_id = #{processId}
+          and is_released = 0
+          and is_deleted = 0
+    </update>
+
+    <!--流程取消发布更新节点的版本信息和发布状态-->
+    <update id="updateCancelProcessNodeItem" parameterType="com.rt.engine.bean.entity.ProcessNodeItem">
+        update process_node_item_t
+        set is_released= 0
+        where process_id = #{processId}
+          and is_released = 1
+          and is_deleted = 0
+          and version = ${version}
+    </update>
+
+    <!-- 查询流程节点属性列表 -->
+    <select id="findProcessNodeItemList" resultType="com.rt.engine.bean.entity.ProcessNodeItem">
+        select item_id,
+        process_id,
+        is_released,
+        version,
+        is_deleted,
+        element_id,
+        element_type,
+        item_name,
+        item_type,
+        item_value,
+        ext1,
+        ext2,
+        ext3
+        from process_node_item_t
+        <where>
+            is_deleted = 0
+            <if test="processId!=null and processId !=''">
+                and process_id = #{processId}
+            </if>
+            <if test="elementId!=null and elementId !=''">
+                and element_id = #{elementId}
+            </if>
+            <if test="isReleased!=null">
+                and is_released = #{isReleased}
+            </if>
+            <if test="version!=null">
+                and version = #{version}
+            </if>
+        </where>
+    </select>
+    <select id="findAlreadyProcessNodeItemList" resultType="com.rt.engine.bean.entity.ProcessNodeItem">
+        select item_id,
+        process_id,
+        is_released,
+        version,
+        is_deleted,
+        element_id,
+        element_type,
+        item_name,
+        item_type,
+        item_value,
+        ext1,
+        ext2,
+        ext3
+        from process_node_item_t
+        <where>
+            is_deleted = 0
+            <if test="processId!=null and processId !=''">
+                and process_id = #{processId}
+            </if>
+            <if test="version!=null">
+                and version = #{version}
+            </if>
+            and lower(element_type) in (lower('userTask'),lower('serviceTask'))
+        </where>
+    </select>
+    <select id="findProcessNodeItemListByInstanceKey"
+            resultType="com.rt.engine.bean.entity.ProcessNodeItem">
+        select p.item_id,
+        p.process_id,
+        p.is_released,
+        p.version,
+        p.is_deleted,
+        p.element_id,
+        p.element_type,
+        p.item_name,
+        p.item_type,
+        p.item_value,
+        p.ext1,
+        p.ext2,
+        p.ext3
+        from process_node_item_t p
+        <where>
+            p.is_deleted = 0
+            and lower(p.element_type) in (lower('userTask'),lower('serviceTask'))
+            and EXISTS (select 1 from zeebe_process_instance i where p.process_id = i.bpmn_process_id_ and p.version =
+            i.version_ and key_ = #{processInstanceKey})
+        </where>
+    </select>
+</mapper>

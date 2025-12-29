@@ -1,0 +1,12 @@
+ARG BASE
+
+FROM ${BASE}
+
+ARG AUTHOR
+ARG VERSION
+ARG ACTION
+
+LABEL maintainer=${AUTHOR} version=${VERSION}
+
+COPY ./target/process-importer-1.0-${ACTION}.jar /app/process-importer.jar
+ENTRYPOINT ["java","-jar","/app/process-importer.jar","-Duser.timezone=Asia/Shanghai"]

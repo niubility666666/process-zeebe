@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessExceptionHandleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rt.engine.bean.entity.ProcessExceptionHandle">
+        <id column="exception_handle_id" property="exceptionHandleId"/>
+        <result column="process_id" property="processId"/>
+        <result column="element_id" property="elementId"/>
+        <result column="timeout_num" property="timeoutNum"/>
+        <result column="timeout_unit" property="timeoutUnit"/>
+        <result column="retry_num" property="retryNum"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_time" property="updatedTime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        exception_handle_id, process_id, element_id, timeout_num, timeout_unit, retry_num, created_by, to_char(created_time, 'YYYY-MM-DD HH24:MI:SS') as created_time,
+        updated_by,
+        to_char(updated_time, 'YYYY-MM-DD HH24:MI:SS') as updated_time
+    </sql>
+
+    <select id="selectProcessExceptionHandleList" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from process_exception_handle
+        <where>
+
+        </where>
+    </select>
+
+    <insert id="insertProcessExceptionHandle">
+        insert into process_exception_handle
+        (exception_handle_id,
+         process_id,
+         element_id,
+         timeout_num,
+         timeout_unit,
+         retry_num,
+         created_by,
+         created_time,
+         updated_by,
+         updated_time)
+        values (#{exceptionHandleId},
+                #{processId},
+                #{elementId},
+                #{timeoutNum},
+                #{timeoutUnit},
+                #{retryNum},
+                #{createdBy},
+                now(),
+                #{updatedBy},
+                now())
+    </insert>
+
+    <delete id="deleteProcessExceptionHandle">
+        delete
+        from process_exception_handle
+        where exception_handle_id = #{exceptionHandleId}
+    </delete>
+</mapper>

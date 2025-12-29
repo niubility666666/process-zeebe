@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessApiMapper">
+    <!-- 对外服务接口使用  -->
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rt.engine.bean.dto.ZeebeProcessInstance">
+        <id column="key_" property="key"/>
+        <result column="bpmn_process_id_" property="bpmnProcessId"/>
+        <result column="end_" property="end"/>
+        <result column="parent_element_instance_key_" property="parentElementInstanceKey"/>
+        <result column="parent_process_instance_key_" property="parentProcessInstanceKey"/>
+        <result column="partition_id_" property="partitionId"/>
+        <result column="process_definition_key_" property="processDefinitionKey"/>
+        <result column="start_" property="start"/>
+        <result column="state_" property="state"/>
+        <result column="version_" property="version"/>
+    </resultMap>
+
+    <select id="findProcessInstanceByKey" resultMap="BaseResultMap">
+        select key_,
+               bpmn_process_id_,
+               end_,
+               parent_element_instance_key_,
+               parent_process_instance_key_,
+               partition_id_,
+               process_definition_key_,
+               start_,
+               state_,
+               version_
+        from zeebe_process_instance
+        where key_ = #{key}
+    </select>
+
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMapTwo" type="com.rt.engine.bean.dto.ZeebeElementInstance">
+        <id column="id" property="id"/>
+        <result column="bpmn_element_type_" property="bpmnElementType"/>
+        <result column="element_id_" property="elementId"/>
+        <result column="flow_scope_key_" property="flowScopeKey"/>
+        <result column="intent_" property="intent"/>
+        <result column="key_" property="key"/>
+        <result column="partition_id_" property="partitionId"/>
+        <result column="position_" property="position"/>
+        <result column="process_definition_key_" property="processDefinitionKey"/>
+        <result column="process_instance_key_" property="processInstanceKey"/>
+        <result column="timestamp_" property="timestamp"/>
+    </resultMap>
+
+    <select id="findElementInstanceByProcessId" resultMap="BaseResultMapTwo">
+        select
+        id
+        , bpmn_element_type_, element_id_, flow_scope_key_, intent_, key_, partition_id_, position_,
+        process_definition_key_, process_instance_key_, timestamp_
+        from zeebe_element_instance
+        <where>
+            process_instance_key_ = #{instanceId}
+        </where>
+    </select>
+
+
+    <!-- 查询当前流程实例的待处理任务信息 -->
+    <select id="findNextJobsByInstanceKey" resultType="com.rt.engine.bean.dto.JobInfoDto">
+        SELECT t3.bpmn_process_id_                                                  AS bpmnProcessId,
+               t2.process_instance_key_                                             AS processInstanceKey,
+               t1.element_instance_key_                                             AS elementInstanceKey,
+               t4.element_id                                                        AS elementId,
+               t4.element_name                                                      AS elementName,
+               t4.element_type                                                      AS elementType,
+               t1.key_                                                              AS jobKey,
+               t1.state_                                                            AS jobState,
+               to_char(to_timestamp(t1.timestamp_ / 1000), 'YYYY-MM-DD HH24:MI:SS') AS startTime,
+               t3.version_                                                          AS version
+        FROM zeebe_job t1
+                 LEFT JOIN zeebe_element_instance t2 ON t1.element_instance_key_ = t2.key_
+            AND t1.process_instance_key_ = t2.process_instance_key_
+                 LEFT JOIN zeebe_process_instance t3 ON t3.key_ = t2.process_instance_key_
+            AND t3.process_definition_key_ = t2.process_definition_key_
+                 LEFT JOIN process_element_t t4 ON t4.element_id = t2.element_id_
+            AND t4.VERSION = t3.version_
+        WHERE t2.process_instance_key_ = #{processInstanceKey}
+          AND LOWER(t2.intent_) = LOWER('element_activated')
+          AND LOWER(t1.state_) = LOWER('created');
+    </select>
+</mapper>

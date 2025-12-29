@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ProcessVariableDao">
+
+    <insert id="insertProcessVariable" parameterType="com.rt.engine.bean.entity.ProcessVariable">
+
+        insert into process_variable_t (job_key, process_id, process_instance_key, element_id, element_instance_key,
+                                        element_name, element_start_time, element_end_time, variable_name,
+                                        variable_value, created_by, created_time)
+        VALUES (#{jobKey}, #{processId}, #{processInstanceKey}, #{elementId}, #{elementInstanceKey},
+                #{elementName}, #{elementStartTime}, to_char(now(), 'YYYY-MM-DD HH24:MI:SS'), #{variableName}, #{variableValue}, #{createdBy}, now())
+    </insert>
+
+    <!--查询当前实例任务日志-->
+    <select id="findTaskLogList" resultType="com.rt.engine.bean.entity.ProcessVariable">
+        select job_key                                            as jobKey,
+               process_id                                         as processId,
+               process_instance_key                               as processInstanceKey,
+               element_id                                         as elementId,
+               element_instance_key                               as elementInstanceKey,
+               element_name                                       as elementName,
+               element_start_time                                 as elementStartTime,
+               to_char(element_end_time, 'YYYY-MM-DD HH24:MI:SS') as elementEndTime,
+               variable_name                                      as variableName,
+               variable_value                                     as variableValue,
+               created_by                                         as createdBy,
+               to_char(created_time, 'YYYY-MM-DD HH24:MI:SS')     as createdTime
+        from process_variable_t
+        WHERE process_id = #{bpmnProcessId}
+          AND process_instance_key = #{instanceId}
+        order by created_time
+    </select>
+</mapper>

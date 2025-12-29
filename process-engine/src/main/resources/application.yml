@@ -1,0 +1,54 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /process
+
+spring:
+  application:
+    name: process-engine
+
+  datasource:
+    dynamic:
+      datasource:
+        db1:
+          driver-class-name: org.postgresql.Driver
+          url: ${DB1_JDBC_URL:jdbc:postgresql://127.0.0.1:5432/workflow?stringtype=unspecified&TimeZone=Asia/Shanghai}
+          username: ${DB1_USERNAME:postgres}
+          password: ${DB1_PASSWORD:spaceIN511}
+          type: com.zaxxer.hikari.HikariDataSource
+        db2:
+          driver-class-name: org.postgresql.Driver
+          url: ${DB2_JDBC_URL:jdbc:postgresql://127.0.0.1:5433/apaas?stringtype=unspecified&TimeZone=Asia/Shanghai}
+          username: ${DB2_USERNAME:postgres}
+          password: ${DB2_PASSWORD:passwd123}
+          type: com.zaxxer.hikari.HikariDataSource
+      primary: db1
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD:}
+    jedis:
+      pool:
+        max-active: 1000
+        max-wait: 1
+        max-idle: 10
+        min-idle: 5
+    timeout: 3000
+
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+zeebe:
+  client:
+    security.plaintext: true
+    broker:
+      gateway-address: ${ZEEBE_GATEWAY_ADDRESS:127.0.0.1:26500}
+
+beagle:
+  apaas:
+    proxy-url: ${APAAS_PROXY_URL:https://asp.com/}
+  cron:
+    apaas-service: ${SYNC_APAAS_SERVICE_CRON:0 0/10 * * * ?}

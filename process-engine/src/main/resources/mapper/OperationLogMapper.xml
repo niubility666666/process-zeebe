@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.OperationLogMapper">
+
+    <insert id="insertOperationLogEntity" parameterType="com.rt.engine.bean.entity.OperationLog">
+        insert into sys_operation_log(record_type, record_desc, record_time, operator)
+        values (#{recordType}, #{recordDesc}, now(), #{operator})
+    </insert>
+    <select id="queryOperationLogList" resultType="com.rt.engine.bean.entity.OperationLog">
+        select record_id, record_type, record_desc, record_time, operator
+        from sys_operation_log
+    </select>
+</mapper>

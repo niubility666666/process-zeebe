@@ -1,0 +1,25 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /process/importer
+
+spring:
+  application:
+    name: process-importer
+  profiles:
+    active: @spring.profiles.active@
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL95Dialect
+    hibernate:
+      ddl-auto: update
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/workflow?stringtype=unspecified&TimeZone=Asia/Shanghai
+    username: postgres
+    password: spaceIN511
+    type: com.zaxxer.hikari.HikariDataSource
+
+rt:
+  hazel-cast:
+    connection: 127.0.0.1:5701
+    connection-timeout: PT30S

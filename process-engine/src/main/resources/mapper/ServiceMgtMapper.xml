@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rt.engine.mapper.ServiceMgtMapper">
+    <select id="queryServiceList" resultType="com.rt.engine.bean.entity.ServiceInfo">
+        select service_id as serviceId,
+        service_name as serviceName,
+        http_method as httpMethod,
+        service_url as serviceUrl,
+        service_desc as serviceDesc,
+        request_param as requestParam,
+        request_body as requestBody,
+        response,
+        created_by as createdBy,
+        created_time as createdTime,
+        updated_by as updatedBy,
+        updated_time as updatedTime,
+        auth_type as authType,
+        auth_value as authValue,
+        source
+        from service_t t
+        where t.delete_flag=0
+        and t.created_by=#{userId}
+        <if test="serviceName !=null and serviceName != ''">
+            and t.service_name like '%' || #{serviceName} || '%'
+        </if>
+    </select>
+    <!-- 我的服务列表 -->
+    <select id="queryServiceNameList" parameterType="java.lang.String"
+            resultType="com.rt.engine.bean.dto.ServiceNameDTO">
+        select t.service_id as serviceId,
+        t.service_name as serviceName
+        from service_t t
+        where t.delete_flag=0
+        and t.created_by=#{userId}
+        <if test="serviceName !=null and serviceName != ''">
+            and t.service_name like '%' || #{serviceName} || '%'
+        </if>
+    </select>
+    <!-- 根据serviceId查询服务信息-->
+    <select id="queryServiceInfoById" resultType="com.rt.engine.bean.entity.ServiceInfo">
+        select service_id    as serviceId,
+               service_name  as serviceName,
+               http_method   as httpMethod,
+               service_url   as serviceUrl,
+               service_desc  as serviceDesc,
+               request_param as requestParam,
+               request_body  as requestBody,
+               response,
+               created_by    as createdBy,
+               created_time  as createdTime,
+               updated_by    as updatedBy,
+               updated_time  as updatedTime,
+               auth_type     as authType,
+               auth_value    as authValue,
+               source
+        from service_t t
+        where t.delete_flag = 0
+          and t.service_id = #{serviceId}
+    </select>
+
+    <!-- 同步新增apaas服务-->
+    <insert id="batchInsertService" parameterType="java.util.List">
+        insert into service_t(service_id,service_name, http_method, service_url, service_desc, request_param,
+        request_body, response,auth_type, auth_value, source, created_by, created_time )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.serviceId},#{item.serviceName},#{item.httpMethod},#{item.serviceUrl},#{item.serviceDesc},#{item.requestParam},#{item.requestBody}
+            ,#{item.response},#{item.authType},#{item.authValue},'apaas',#{item.createdBy}
+            ,#{item.createdTime})
+        </foreach>
+    </insert>
+    <!-- 删除apaas服务-->
+    <delete id="deleteApaasService">
+        delete
+        from service_t
+        where source = 'apaas'
+    </delete>
+</mapper>
